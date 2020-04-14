@@ -1,4 +1,28 @@
 walk(document.body);
+document.addEventListener("DOMNodeInserted", function(e) {
+	walk(document.body);
+}, false);
+
+
+if (window.MutationObserver) {
+	var observer = new MutationObserver(function (mutations) {
+		Array.prototype.forEach.call(mutations, function (m) {
+			if (m.type === 'childList') {
+				walk(m.target);
+			} else if (m.target.nodeType === 3) {
+				handleText(m.target);
+			}
+		});
+	});
+
+	observer.observe(document.body, {
+		childList: true,
+		attributes: false,
+		characterData: true,
+		subtree: true
+	});
+}
+
 
 function walk(node) 
 {
@@ -37,11 +61,15 @@ function walk(node)
 
 function handleText(textNode) 
 {
-	var v = textNode.nodeValue;
+	var oldValue = textNode.nodeValue;
+	    v = oldValue;
 
 	v = v.replace(/\bBTS\b/gi, "BTK");
 	
-	textNode.nodeValue = v;
+	// avoid infinite series of DOM changes
+	if (v !== oldValue) {
+		textNode.nodeValue = v;
+	}
 }
 
 
